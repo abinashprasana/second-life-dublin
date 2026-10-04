@@ -16,6 +16,8 @@
 
 <br/>
 
+*Built for the Build for Ireland hackathon · OpenAI × Give(a)Go × Dogpatch Labs*
+
 *Good places deserve another chapter. · Dublin City Council register · CSO Census 2022 · OpenStreetMap · Offline React atlas · Local-only AI*
 
 </div>
@@ -414,4 +416,4 @@ None of these say anything about whether my scoring model is right.
 
 **Abinash Prasana Selvanathan**
 
-*Built for OpenAI × Give(a)Go × Dogpatch Labs. If it's useful to you, a ⭐ is appreciated.*
+*Built for the Build for Ireland hackathon, hosted by OpenAI, Give(a)Go and Dogpatch Labs. If it's useful to you, a ⭐ is appreciated.*
