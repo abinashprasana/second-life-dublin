@@ -1,0 +1,46 @@
+.assistant { margin-top: 24px; border: 1px solid var(--muted); background: var(--surface-panel); }
+.assistant button { cursor: pointer; }
+.assistant button:disabled { opacity: .6; cursor: not-allowed; }
+.assistant-toggle { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 17px; background: none; border: 0; color: var(--paper); text-align: left; }
+.assistant-toggle small, .assistant-label { display: block; font-size: 9px; letter-spacing: .1em; color: var(--muted-on-dark); margin-bottom: 7px; }
+.assistant-toggle strong { font: 400 25px Newsreader, Georgia, serif; }
+.assistant-content { padding: 0 16px 18px; color: var(--light-tint); font-size: 12px; line-height: 1.6; }
+.assistant-intro { margin-top: 0; }
+.assistant-status { border-left: 2px solid var(--selection); padding: 8px 10px; background: var(--surface-raised); font-size: 11px; overflow-wrap: anywhere; }
+.assistant button:not(.assistant-toggle), .assistant-results button { padding: 9px 10px; min-height: 38px; color: var(--paper); background: var(--surface-raised); border: 1px solid var(--control-border); font: inherit; }
+.assistant-status button { display: block; margin-top: 8px; }
+.assistant-starters { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 14px 0; }
+.assistant-starters button { text-align: left; font-size: 11px !important; }
+.assistant-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.assistant label { display: block; font-size: 11px; }
+.assistant select, .assistant textarea { width: 100%; display: block; margin-top: 5px; background: var(--surface-deep); color: var(--paper); border: 1px solid var(--control-border); padding: 9px; font: inherit; border-radius: 0; }
+.assistant textarea { resize: vertical; font-size: 13px; }
+.assistant textarea::placeholder { color: var(--muted-on-dark); }
+.assistant-submit { display: flex; gap: 9px; margin-top: 9px; }
+.assistant-submit button:first-child { background: var(--light-tint); color: var(--surface-panel); }
+.assistant-error { border-left: 2px solid var(--selection); padding-left: 10px; color: var(--selection); }
+.assistant-note { display: block; color: var(--muted-on-dark); margin-top: 14px; font-size: 10px; }
+.assistant-messages { max-height: 620px; overflow: auto; scrollbar-gutter: stable; }
+.assistant-answer { border-top: 1px solid var(--muted); padding: 16px 0; }
+.assistant-answer h3 { font: 400 20px/1.25 Newsreader, Georgia, serif; margin: 0 0 12px; color: var(--paper); }
+.assistant-block { margin: 13px 0; }
+.assistant-block > small { font-size: 9px; color: var(--selection); letter-spacing: .06em; }
+.assistant-block p { margin: 5px 0; }
+.assistant-citations { display: flex; flex-wrap: wrap; gap: 7px; }
+.assistant-citations a { font-size: 10px; color: var(--light-tint); text-underline-offset: 3px; }
+.assistant-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.assistant-facts > div { background: var(--surface-raised); padding: 10px; }
+.assistant-facts dt { font-size: 10px; }
+.assistant-facts dd { margin: 5px 0 0; font-size: 20px; color: var(--selection); }
+.assistant-reference { scroll-margin-top: 30px; padding: 10px 0; border-bottom: 1px solid var(--dark-line); overflow-wrap: anywhere; }
+.assistant-reference p { margin: 5px 0; }
+.assistant-reference a { color: var(--light-tint); }
+.assistant-reference small { display: block; color: var(--muted-on-dark); }
+.assistant details summary { cursor: pointer; padding: 10px 0; color: var(--light-tint); }
+.assistant-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.assistant-chips span { border: 1px solid var(--control-border); padding: 4px 8px; font-size: 10px; }
+.assistant-results li { margin: 5px 0; }
+.assistant-search-banner { display: flex; align-items: center; gap: 14px; padding: 12px 15px; background: var(--surface-raised); border: 1px solid var(--control-border); color: var(--paper); margin-bottom: 16px; font-size: 12px; }
+.assistant-search-banner p { margin: 0; flex: 1; }
+.assistant-search-banner button { color: var(--surface-raised); background: var(--light-tint); padding: 9px 12px; border: 0; cursor: pointer; }
+@media(max-width:600px) { .assistant-starters,.assistant-compare { grid-template-columns: 1fr; } .assistant-messages { max-height: none; } .assistant-search-banner { align-items: flex-start; flex-wrap: wrap; } }

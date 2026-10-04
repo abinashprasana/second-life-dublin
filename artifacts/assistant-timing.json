@@ -1,0 +1,12 @@
+[
+  {
+    "mode": "cold",
+    "seconds": 50.13,
+    "matches": 8
+  },
+  {
+    "mode": "warm",
+    "seconds": 4.66,
+    "matches": 8
+  }
+]
