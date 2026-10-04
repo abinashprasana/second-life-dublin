@@ -4,6 +4,7 @@
 
 **What could a derelict Dublin site become? A local evidence atlas for the people asking.**
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-071827?style=for-the-badge&logo=vercel&logoColor=white)](https://web-tau-flax-32.vercel.app/?site=DS1012)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Three.js](https://img.shields.io/badge/Three.js-3D%20Atlas-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
@@ -47,6 +48,8 @@ The scores are a starting point for a conversation. They can't tell you whether 
 ---
 
 ## 🖥️ Product Surfaces
+
+**[▶ Open the live atlas](https://web-tau-flax-32.vercel.app/?site=DS1012)**. It opens on Rathmore Park, Raheny (DS1012). The hosted version is the offline atlas only; the assistant needs Ollama on your own machine.
 
 - 🏙️ **Offline React atlas** (`web/`). The main product. Desktop opens on a 3D model of Dublin; phones get a flat map. Every site has its own link (`?site=DS1596`), so you can send someone straight to one. Maps, fonts, census figures and scores all ship with the build, so it makes no calls to the internet.
 - 🤖 **Local assistant** (`src/assistant_api.py`). An optional "Ask about this place" panel. It runs a small AI model on your own computer and can explain a site, compare two uses, or find sites from a plain-English request like "council-owned places with lots of under-15s".
