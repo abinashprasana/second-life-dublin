@@ -186,7 +186,7 @@ def answer_from_evidence(intent, refs, chosen, site):
     if not site['coverage']['hasOsm']:
         blocks.append({'kind':'uncertainty','text':'The four uses cannot be ranked until nearby-service evidence is collected. Register and census facts remain available.','evidenceIds':['coverage']})
     else:
-        blocks.append({'kind':'uncertainty','text':'Service factors compare eight cached sites. Census factors use available sites. Scores are discussion leads, not proof of demand or feasibility. Missing tags do not prove absence.','evidenceIds':['coverage']})
+        blocks.append({'kind':'uncertainty','text':'Service factors compare only the sites with cached service evidence. Census factors use available sites. Scores are discussion leads, not proof of demand or feasibility. Missing tags do not prove absence.','evidenceIds':['coverage']})
     blocks.append({'kind':'next_checks','text':'Confirm condition, ownership, planning requirements and heritage constraints locally before deciding on a use.','evidenceIds':[k for k in refs if k.startswith('check.')]})
     used = {key for block in blocks for key in block['evidenceIds']}
     return blocks, [ref for key,ref in refs.items() if key in used]

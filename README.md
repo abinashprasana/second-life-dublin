@@ -16,7 +16,7 @@
 
 <br/>
 
-*Built for the Build for Ireland hackathon · OpenAI × Give(a)Go × Dogpatch Labs*
+*A Dublin civic product by Abinash Prasana Selvanathan*
 
 *Good places deserve another chapter. · Dublin City Council register · CSO Census 2022 · OpenStreetMap · Offline React atlas · Local-only AI*
 
@@ -35,7 +35,7 @@ Second Life fills that gap. For every site it pulls in two kinds of local eviden
 
 From those two it scores four possible uses: childcare, study space, a repair workshop, and a community hub. You go through one site at a time: the place, its possible uses, the evidence behind them, and what still needs checking. The full register stays searchable.
 
-The scores are a starting point for a conversation. They can't tell you whether a building is sound, who owns it, or whether planning would allow a change of use, so every site ends with those questions written out. When I didn't have evidence for a site, the app says so and leaves it unscored.
+The scores are a starting point for a conversation. They can't tell you whether a building is sound, who owns it, or whether planning would allow a change of use, so every site ends with those questions written out. Every current site has cached nearby-service evidence; the app still leaves a site unscored if that evidence is missing from a future update.
 
 ### 🔭 At a glance
 
@@ -67,16 +67,26 @@ The scores are a starting point for a conversation. They can't tell you whether 
 |:---|:---|:---|
 | 🏛️ **Dublin City Council** | [Derelict Sites Register](https://data.smartdublin.ie/dataset/derelict-site-register) on Smart Dublin: 134 sites, GeoJSON | [CC BY](http://www.opendefinition.org/licenses/cc-by) |
 | 📊 **CSO Ireland** | [Census 2022 Small Area Population Statistics](https://www.cso.ie/en/census/census2022/census2022smallareapopulationstatistics/): population, age shares, households | [CC BY 4.0](https://www.cso.ie/en/aboutus/whoweare/copyrightpolicy/) |
-| 🗺️ **Tailte Éireann / CSO** | [Small Area Boundaries 2022, generalised 20 m](https://data-osi.opendata.arcgis.com/datasets/osi::cso-small-areas-national-statistical-boundaries-2022-generalised-20m/about): the 2,261 area outlines on the map | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
+| 🗺️ **Tailte Éireann / CSO** | [Small Area Boundaries 2022, generalised 20 m](https://data.gov.ie/dataset/cso-small-areas-national-statistical-boundaries-2022-generalised-20m/resource/5ace32d6-5e91-4a3a-9e87-998822c09e92): the 2,261 area outlines on the map | Reuse terms need confirmation from the publisher; the GeoJSON resource lists no licence. |
 | 🌍 **OpenStreetMap** | Nearby amenities within 800 m (straight line) | [ODbL](https://www.openstreetmap.org/copyright) · © OpenStreetMap contributors |
 
 </div>
 
 All four were retrieved on 4 October 2026. The register is the Smart Dublin release last updated on 24 June 2026. All 134 sites matched to exactly one Small Area, and none is missing census figures.
 
-### ❔ Why only 8 sites have service evidence
+Before a public release, confirm the boundary GeoJSON reuse terms with the publisher. Its resource page does not establish the CC BY 4.0 claim previously shown here.
 
-The usual OSM query service (Overpass) was blocked while I built the dataset. The fallback is slow and rate-limited, so I cached a spread of eight sites across the city: `DS040`, `DS864`, `DS905`, `DS1012`, `DS1369`, `DS1596`, `DS1868` and `DS1982`. The other 126 sites still show their register and census facts. Their scores are left blank, because a guess would be worse than nothing.
+### 🔎 How the service evidence was collected
+
+Overpass, the usual OSM query service, was unavailable, so I fetched all 134 sites from the OSM API's map endpoint, the same way I fetched the first eight. The API rate-limited the run, so the script paused and retried. Six city-centre sites held too much map data for one request; I fetched those in four smaller tiles and merged them. The tiles cover the same area. No site was estimated or filled in.
+
+I checked the results independently:
+
+- Distances were recalculated a second way for all 3,326 services, and each service category was checked against its own OSM tags.
+- I looked up 60 randomly sampled services live by OSM ID; all 60 matched.
+- A few rows of neighbouring houses share a nearby-service list. Their distances differ by site, which is consistent with the houses being close together.
+
+The checks and limits are in [the OSM coverage verification report](artifacts/osm-coverage-verification.md).
 
 ---
 
@@ -86,7 +96,7 @@ The usual OSM query service (Overpass) was blocked while I built the dataset. Th
 flowchart TD
     A["🏚️ Register GeoJSON\n134 derelict sites\nDublin City Council"]
     B["📊 CSO SAPS 2022\n+ Small Area boundaries\nTailte Éireann / CSO"]
-    C["🌍 OSM service tags\nsrc/osm.py\n8 cached sites"]
+    C["🌍 OSM service tags\nsrc/osm.py\n134 cached sites"]
     D["🧭 Spatial join\nsrc/join.py\nsite → Small Area"]
     E["⚖️ Evidence scoring\nsrc/score.py\nfew services nearby + local demand\n0–100"]
     F["✅ Snapshot export\nsrc/export_web.py\nvalidated before publish"]
@@ -115,7 +125,7 @@ flowchart TD
     style I fill:#c00000,color:#ffffff,stroke:#c00000
 ```
 
-The export step won't publish bad data. Before it replaces anything in `web/public/data/`, it checks for 134 unique sites, exactly eight scored, four uses each, scores between 0 and 100, and valid coordinates, sources and map shapes. If any check fails, the previous snapshot stays live and the reason is written to `data/cache/export_build_report.json`.
+The export step won't publish bad data. Before it replaces anything in `web/public/data/`, it checks for 134 unique sites, a scored count matching the number of OSM cache files (now 134), four uses each, scores between 0 and 100, and valid coordinates, sources and map shapes. If any check fails, the previous snapshot stays live and the reason is written to `data/cache/export_build_report.json`.
 
 ---
 
@@ -134,26 +144,26 @@ Every score runs from 0 to 100. A site scores high for a use when **lots of the 
 
 </div>
 
-📏 **How to read a score.** Each ingredient is rescaled so the lowest site gets 0 and the highest gets 1 (min–max scaling), then the weights above are applied. Census values are compared across all 134 sites, but service counts only across the eight sites with OSM data. So a score tells you how a site compares with the other seven, not with the whole city, and adding a ninth site would shift every score.
+📏 **How to read a score.** Each ingredient is rescaled so the lowest site gets 0 and the highest gets 1 (min–max scaling), then the weights above are applied. Census values and service counts are now compared across all 134 register sites. The scores compare these sites within the current snapshot; adding a site or changing its evidence can shift every score.
 
-### 📊 Scores for the eight sites with evidence
+### 📊 Highest-scoring sites
 
 <div align="center">
 
 | Site | Place | 👶 Childcare | 📚 Study | 🔧 Repair | 🤝 Hub |
 |:---|:---|:---:|:---:|:---:|:---:|
-| `DS905` | Naas Road Old, Coolfan House, Dublin 12 | **70.1** | 58.8 | 61.6 | 63.7 |
-| `DS1868` | Mellowes Road, Finglas, Dublin 11 | 55.0 | 37.8 | **65.8** | 55.8 |
-| `DS1012` | Rathmore Park, Raheny, Dublin 5 | **64.4** | 33.3 | 64.3 | 51.3 |
-| `DS1982` | Coolgariff Road, Beaumont, Dublin 9 | 49.5 | 36.2 | **61.5** | 42.7 |
-| `DS1596` | Shelmalier Road, East Wall, Dublin 3 | **60.7** | 14.4 | 17.0 | 35.6 |
-| `DS040` | Conyngham Road, Dublin 8 | 47.4 | 38.0 | **57.3** | 41.5 |
-| `DS864` | Templemore Avenue | 7.5 | 6.8 | **54.9** | 7.2 |
-| `DS1369` | Merrion Road, former Swiftcall building | 50.7 | 31.4 | **52.6** | 47.7 |
+| `DS2071` | Dorset Street Upper, 118, Dublin 1 | 39.7 | **84.2** | 54.1 | 47.2 |
+| `DS2172` | Dorset Street Upper, 78, Dublin 1 | 39.7 | **84.2** | 60.8 | 51.7 |
+| `DS911` | Thomas Court, 37, Dublin 8 | 41.7 | **81.3** | 51.0 | 45.6 |
+| `DS575A` | Leeson Street Lower, 6, Dublin 2 | 48.5 | 10.8 | 49.5 | **78.4** |
+| `DS580` | North King Street, 86, Smithfield, Dublin 7 | 50.9 | **77.5** | 43.1 | 56.3 |
+| `DS1105` | Emmet Road, 105-107, former Horse & Jockey pub, Dublin 8 | 55.9 | 44.9 | **75.7** | 61.8 |
+| `DS1772` | Langrishe Place, 5, Summerhill, Dublin 1 | 28.0 | **75.5** | 43.3 | 36.3 |
+| `DS1123` | Dolphin's Barn Street, 45, Dublin 8 | 60.6 | 41.0 | **75.2** | 50.5 |
 
 </div>
 
-The top use for each site is in bold. Study space doesn't come first anywhere, and Rathmore Park is basically a tie (64.4 vs 64.3).
+The top use for each site is in bold. DS2072 and DS2073, next door to DS2071 on Dorset Street Upper, also score 84.2 for Study space. Across all 134 sites, the highest-scoring use is Repair workshop for 80, Childcare for 23, Study space for 22 and Community hub for 9.
 
 <details>
 <summary>🔍 Worked example: why childcare comes out on top at DS1596 (Shelmalier Road, East Wall)</summary>
@@ -168,17 +178,17 @@ Childcare        60.7
   few-services score = 1.000   age-share score = 0.213
   → 100 × (0.5 × 1.000 + 0.5 × 0.213) = 60.7
 
-Community hub    35.6
+Community hub    49.2
   OSM community: 2 within 400 m; 7 within 800 m; nearest 194 m
-  few-services score = 0.545   population score = 0.166
+  few-services score = 0.818   population score = 0.166
 
-Repair workshop  17.0
-  OSM repair: 3 within 400 m; 22 within 800 m; nearest 376 m
-  few-services score = 0.000   density = 0.141   households = 0.538
-
-Study space      14.4
+Study space      44.4
   OSM study: 1 within 400 m; 4 within 800 m; nearest 194 m
-  few-services score = 0.200   age-share score = 0.088
+  few-services score = 0.800   age-share score = 0.088
+
+Repair workshop  30.3
+  OSM repair: 3 within 400 m; 22 within 800 m; nearest 376 m
+  few-services score = 0.267   density = 0.141   households = 0.538
 
 Next checks:
   · What is the building's current condition?
@@ -241,7 +251,9 @@ For searches, you see the filters it chose before anything changes. Click **Show
 
 The Python tests recompute scores for several sites and compare them with the published data, and make sure the exporter rejects duplicate IDs and out-of-range scores. The assistant tests try bad filters, fake citations, outside requests, out-of-date data, a stopped Ollama, and a browser that disconnects mid-answer.
 
-I also wrote 24 questions meant to trip the assistant up: comparing a scored site with an unscored one, searches that should return nothing, "who owns this?", vague criteria, and attempts to make it ignore its instructions. None came back with a made-up number, score or source. The full answers are in `artifacts/assistant-evaluation.json`. Twenty-four questions can't cover everything, which is why the app always shows the filters it applied.
+For the OSM update, I independently recalculated distances and checked the tags for all 3,326 services. I also looked up 60 randomly chosen services live by OSM ID; all 60 matched. See [the verification report](artifacts/osm-coverage-verification.md) for the method and neighbouring-site checks.
+
+I also wrote 24 questions meant to trip the assistant up: comparisons, searches that should return nothing, "who owns this?", vague criteria, and attempts to make it ignore its instructions. The recorded 24-question run used the earlier eight-site snapshot; it has not yet been rerun against the 134-site update. That run found no made-up number, score or source. The full answers are in `artifacts/assistant-evaluation.json`. The app always shows the filters it applied.
 
 ### ⚡ Speed on my laptop
 
@@ -305,9 +317,10 @@ secondlife/
 │
 ├── 📂 data/
 │   ├── raw/                           Register, census and boundary files
-│   └── cache/                         Joined data, 8 OSM caches, evidence CSV, build reports
+│   └── cache/                         Joined data, 134 OSM caches, evidence CSV, build reports
 │
 ├── 📂 tests/                          Data, scoring and assistant tests + 24-question evaluation
+│   └── verify_osm_cache.py            Independent checks on the OSM cache
 └── 📂 artifacts/                      Screenshots and verification notes
 ```
 
@@ -375,9 +388,9 @@ npm run build
 
 `python tests/evaluate_assistant.py` runs the 24-question check. It needs the assistant server and Ollama running.
 
-### ➕ Adding more OSM evidence
+### ➕ Refreshing OSM evidence
 
-To score more sites, fetch new `data/cache/osm_<site-id>.json` files with `src.osm` and note when you got them. Update the expected scored count in `src/export_web.py`, rebuild the data, read `build_report.json`, and run the tests. Expect the existing scores to change, since services are compared across whichever sites have OSM data.
+All 134 current sites have cached evidence. To refresh it, fetch the `data/cache/osm_<site-id>.json` files with `src.osm` and record when you got them. Rebuild the data, read `build_report.json`, and run the tests. If a new register site is added without a cache file, it remains unscored. Scores can change when the service data or the set of sites changes.
 
 ---
 
@@ -385,7 +398,7 @@ To score more sites, fetch new `data/cache/osm_<site-id>.json` files with `src.o
 
 1. 📏 **Distance isn't demand.** 800 m in a straight line is a rough stand-in. It isn't a walking route, and it doesn't show anyone wants the service.
 2. 🧩 **OSM is patchy.** Some parts of Dublin are mapped in far more detail than others. A missing tag can push a score up when the service is really there.
-3. 🔢 **Eight sites is a small group.** The services side of each score only compares those eight.
+3. 📅 **OSM is a snapshot.** These counts reflect OpenStreetMap on 4 October 2026, and services open and close.
 4. 🏘️ **Census figures describe the area, not the building.** The site might sit right at the edge of its Small Area.
 5. 📸 **The register is a snapshot.** Sites may have been sold, fixed up or removed since.
 6. 🧪 **Testing so far is limited.** The assistant has only run on one laptop, and I haven't tested with a touch device or screen reader yet.
@@ -394,7 +407,7 @@ To score more sites, fetch new `data/cache/osm_<site-id>.json` files with `src.o
 
 | 🔧 Possible extension | 📈 What it would add |
 |:---|:---|
-| 🌍 OSM evidence for all 134 sites | A citywide comparison instead of eight sites |
+| 🌍 Scheduled OSM refresh | Keeps service counts current as the map changes |
 | 🚶 Walking-route distances | Real access instead of straight-line rings |
 | 🏛️ Planning, ownership and condition records | Answers to the next checks |
 | 🗣️ Input from people who live nearby | The local knowledge no dataset has |
@@ -416,4 +429,4 @@ None of these say anything about whether my scoring model is right.
 
 **Abinash Prasana Selvanathan**
 
-*Built for the Build for Ireland hackathon, hosted by OpenAI, Give(a)Go and Dogpatch Labs. If it's useful to you, a ⭐ is appreciated.*
+*If Second Life is useful to you, a ⭐ is appreciated.*

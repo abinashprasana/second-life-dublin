@@ -7,16 +7,16 @@ import type { OrbitControls as Controls } from 'three-stdlib'
 import type { SceneData } from './SpatialViewer'
 import type { Site, UseName } from './types'
 import { cityCameraDistance, FrameQuality } from './sceneControls'
-import { pickSite, isSiteClick } from './sitePicking'
+import { pickSite, nearbySites, isSiteClick } from './sitePicking'
 import type { CameraCommand, CameraPreset, LayerVisibility } from './sceneControls'
 
-type Props = { scene: SceneData; sites: Site[]; visibleSiteIds?:string[]; selectedId: string; selectedUse: UseName; selectedGroup: string; mode: 'map' | 'concept'; command: CameraCommand; preset: CameraPreset; layers: LayerVisibility; visible: boolean; onSelect: (id: string) => void; onFail: () => void }
+type Props = { scene: SceneData; sites: Site[]; visibleSiteIds?:string[]; selectedId: string; selectedUse: UseName; selectedGroup: string; mode: 'map' | 'concept'; command: CameraCommand; preset: CameraPreset; layers: LayerVisibility; visible: boolean; onSelect: (id: string) => void; onCandidates: (ids: string[]) => void; onFail: () => void }
 function boundaryGeometry(polygons: number[][][][], y: number) {
   const points: number[] = []
   for (const polygon of polygons) for (const ring of polygon) for (let i = 1; i < ring.length; i++) points.push(ring[i-1][0]/1000,y,ring[i-1][1]/1000,ring[i][0]/1000,y,ring[i][1]/1000)
   return new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute(points, 3))
 }
-function Atlas({ scene, sites, visibleSiteIds, selectedId, selectedGroup, onSelect, layers }: Props) {
+function Atlas({ scene, sites, visibleSiteIds, selectedId, selectedGroup, onSelect, onCandidates, layers }: Props) {
   const selected = scene.sites.find(s => s.id === selectedId)!
   const geometry = useMemo(() => {
     const shapes = scene.outline.map(polygon => {
@@ -38,7 +38,7 @@ function Atlas({ scene, sites, visibleSiteIds, selectedId, selectedGroup, onSele
     <lineSegments geometry={geometry.coast}><lineBasicMaterial color={palette.mapLine} transparent opacity={.9}/></lineSegments>
     <lineSegments geometry={geometry.bottom}><lineBasicMaterial color={palette.darkLine} transparent opacity={.45}/></lineSegments>
     <Pins entries={groups[0]} covered/><Pins entries={groups[1]} covered={false}/>
-    <SitePicker entries={visibleSites} onSelect={onSelect}/>
+    <SitePicker entries={visibleSites} onSelect={onSelect} onCandidates={onCandidates}/>
     {(!visibleSiteIds||visibleSiteIds.includes(selectedId))&&<><Locator position={selected.position} rings={layers.rings}/>
     {layers.services && <ServicePoints services={selected.services.filter(s => s.groups.includes(selectedGroup))}/>}</>}
   </>
@@ -62,30 +62,34 @@ function Locator({position,rings}:{position:number[];rings:boolean}) {
     <mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[.22,40]}/><meshBasicMaterial color={palette.selection} transparent opacity={.12} depthWrite={false}/></mesh>
   </group>
 }
-function SitePicker({entries,onSelect}:{entries:SceneData['sites'];onSelect:(id:string)=>void}) {
+function SitePicker({entries,onSelect,onCandidates}:{entries:SceneData['sites'];onSelect:(id:string)=>void;onCandidates:(ids:string[])=>void}) {
   const {gl,camera}=useThree()
   useEffect(()=>{
     const canvas=gl.domElement
     let down:{x:number;y:number;id:number}|null=null
     let dragged=false
-    const find=(event:PointerEvent)=>{
+    const projected=(event:PointerEvent)=>{
       const rect=canvas.getBoundingClientRect()
-      const projected=entries.map(site=>{
+      const markers=entries.map(site=>{
         const point=new THREE.Vector3(site.position[0]/1000,.075,site.position[1]/1000).project(camera)
         return {id:site.id,x:(point.x+1)*rect.width/2,y:(1-point.y)*rect.height/2,depth:point.z}
       })
-      return pickSite(projected,event.clientX-rect.left,event.clientY-rect.top,event.pointerType==='touch'?22:14)
+      return {markers,x:event.clientX-rect.left,y:event.clientY-rect.top,radius:event.pointerType==='touch'?22:14}
     }
     const start=(event:PointerEvent)=>{if(event.button!==0||!event.isPrimary)return;down={x:event.clientX,y:event.clientY,id:event.pointerId};dragged=false}
     const move=(event:PointerEvent)=>{
       if(down&&!isSiteClick(down,{x:event.clientX,y:event.clientY}))dragged=true
-      const id=down?null:find(event)
+      const hit=down?null:projected(event)
+      const id=hit?pickSite(hit.markers,hit.x,hit.y,hit.radius):null
       canvas.style.cursor=down?'grabbing':id?'pointer':'grab'
       canvas.title=id?`Select site ${id}`:''
     }
     const end=(event:PointerEvent)=>{
       if(down&&event.pointerId===down.id&&!dragged&&isSiteClick(down,{x:event.clientX,y:event.clientY})){
-        const id=find(event);if(id)onSelect(id)
+        const hit=projected(event)
+        const ids=nearbySites(hit.markers,hit.x,hit.y,hit.radius)
+        if(ids.length>1)onCandidates(ids)
+        else if(ids.length===1)onSelect(ids[0])
       }
       down=null;canvas.style.cursor='grab'
     }
@@ -95,7 +99,7 @@ function SitePicker({entries,onSelect}:{entries:SceneData['sites'];onSelect:(id:
     canvas.addEventListener('pointerup',end)
     canvas.addEventListener('pointercancel',cancel)
     return ()=>{canvas.removeEventListener('pointerdown',start);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',end);canvas.removeEventListener('pointercancel',cancel);cancel()}
-  },[entries,onSelect,gl,camera])
+  },[entries,onSelect,onCandidates,gl,camera])
   return null
 }
 function Pins({ entries, covered }: { entries: SceneData['sites']; covered: boolean }) {

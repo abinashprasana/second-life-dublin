@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import type { GeoJsonObject } from 'geojson'
 import type { Site } from './types'
+import { nearbySites } from './sitePicking'
 import { DEFAULT_LAYERS } from './sceneControls'
 import type { CameraCommand, CameraPreset, LayerVisibility } from './sceneControls'
 
@@ -11,6 +12,7 @@ interface Props {
   visibleSiteIds?: string[]
   selectedId: string
   onSelect: (id: string) => void
+  onCandidates?: (ids: string[]) => void
   selectedGroup?: string | null
   onGeometryError?: () => void
   layers?: LayerVisibility
@@ -20,20 +22,24 @@ interface Props {
 
 const dataPath = (name: string) => `${import.meta.env.BASE_URL}data/${name}`
 
-export default function AtlasMap({ sites, visibleSiteIds, selectedId, onSelect, selectedGroup, onGeometryError, layers = DEFAULT_LAYERS, preset = 'site', command }: Props) {
+export default function AtlasMap({ sites, visibleSiteIds, selectedId, onSelect, onCandidates, selectedGroup, onGeometryError, layers = DEFAULT_LAYERS, preset = 'site', command }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const pointsRef = useRef<L.LayerGroup | null>(null)
   const areasRef = useRef<L.GeoJSON | null>(null)
   const layersRef = useRef(layers)
   layersRef.current = layers
+  const candidateHandler = useRef(onCandidates)
+  candidateHandler.current = onCandidates
+  const selectHandler = useRef(onSelect)
+  selectHandler.current = onSelect
 
   useEffect(() => {
     if (!containerRef.current) return
     const map = L.map(containerRef.current, {
       zoomControl: false,
       attributionControl: false,
-      preferCanvas: true,
+      preferCanvas: false,
       zoomAnimation: false,
       scrollWheelZoom: false,
       minZoom: 10,
@@ -41,6 +47,17 @@ export default function AtlasMap({ sites, visibleSiteIds, selectedId, onSelect, 
     })
     mapRef.current = map
     map.fitBounds(L.latLngBounds(sites.map(site => [site.position.lat, site.position.lon])), { padding: [34, 34] })
+    const pickAt = (point: L.Point, touch = false) => {
+      const screenSites = sites.filter(site => !visibleSiteIds || visibleSiteIds.includes(site.id)).map(site => {
+        const p = map.latLngToContainerPoint([site.position.lat, site.position.lon])
+        return { id: site.id, x: p.x, y: p.y, depth: 0 }
+      })
+      const ids = nearbySites(screenSites, point.x, point.y, touch ? 26 : 20)
+      if (ids.length > 1 && candidateHandler.current) candidateHandler.current(ids)
+      else if (ids.length === 1) selectHandler.current(ids[0])
+    }
+    const onMapClick = (event: L.LeafletMouseEvent) => pickAt(map.latLngToContainerPoint(event.latlng), (event.originalEvent as PointerEvent)?.pointerType === 'touch')
+    map.on('click', onMapClick)
     let live = true
     Promise.all([
       fetch(dataPath('dublin_areas.geojson')).then(response => { if (!response.ok) throw new Error('Small Areas unavailable'); return response.json() as Promise<GeoJsonObject> }),
@@ -50,16 +67,20 @@ export default function AtlasMap({ sites, visibleSiteIds, selectedId, onSelect, 
       areasRef.current = L.geoJSON(areas, { style: { color: palette.mapArea, weight: 0.6, opacity: 0.35, fillOpacity: 0 }, interactive: false })
       if (layersRef.current.areas) areasRef.current.addTo(map).bringToBack()
       L.geoJSON(outline, { style: { color: palette.mapLine, weight: 1.5, opacity: 0.85,
-        fillColor: palette.mapBase, fillOpacity: 0.5 }, interactive: false }).addTo(map).bringToBack()
+        fillColor: palette.mapBase, fillOpacity: 0.9 }, interactive: false }).addTo(map).bringToBack()
     }).catch(() => { if (live) onGeometryError?.() })
-    requestAnimationFrame(() => map.invalidateSize())
+    const resizeFrame = requestAnimationFrame(() => { if (live) map.invalidateSize() })
     return () => {
       live = false
+      cancelAnimationFrame(resizeFrame)
+      map.off('click', onMapClick)
+      pointsRef.current?.remove()
+      pointsRef.current = null
       mapRef.current = null
       areasRef.current = null
       map.remove()
     }
-  }, [sites, onGeometryError])
+  }, [sites, visibleSiteIds, onGeometryError])
 
   useEffect(() => {
     const map = mapRef.current, areas = areasRef.current
@@ -82,12 +103,21 @@ export default function AtlasMap({ sites, visibleSiteIds, selectedId, onSelect, 
         keyboard: false,
         title: `${site.id}: ${site.title}`,
         zIndexOffset: selected ? 1000 : 0,
-        icon: L.divIcon({ className: 'atlas-pin-wrap', html: `<span class="${className}"><span class="atlas-pin__core"></span></span>`, iconSize: [22, 22], iconAnchor: [11, 11] }),
+        icon: L.divIcon({ className: 'atlas-pin-wrap', html: `<span class="${className}"><span class="atlas-pin__core"></span></span>`, iconSize: [32, 32], iconAnchor: [16, 16] }),
       })
       const siteTooltip = document.createElement('span')
       siteTooltip.textContent = site.id
       marker.bindTooltip(siteTooltip, { direction: 'top', offset: [0, -8] })
-      marker.on('click', () => onSelect(site.id))
+      marker.on('click', event => {
+        const point = map.latLngToContainerPoint(event.latlng)
+        const screenSites = sites.filter(item => !visibleSiteIds || visibleSiteIds.includes(item.id)).map(item => {
+          const p = map.latLngToContainerPoint([item.position.lat, item.position.lon])
+          return { id: item.id, x: p.x, y: p.y, depth: 0 }
+        })
+        const ids = nearbySites(screenSites, point.x, point.y, 20)
+        if (ids.length > 1 && candidateHandler.current) candidateHandler.current(ids)
+        else selectHandler.current(site.id)
+      })
       marker.addTo(layer)
     }
     const selected = sites.find(site => site.id === selectedId)
@@ -107,7 +137,7 @@ export default function AtlasMap({ sites, visibleSiteIds, selectedId, onSelect, 
       }
     }
     return () => { layer.remove(); pointsRef.current = null }
-  }, [sites, visibleSiteIds, selectedId, selectedGroup, onSelect, layers.rings, layers.services])
+  }, [sites, visibleSiteIds, selectedId, selectedGroup, layers.rings, layers.services])
 
   useEffect(() => {
     const map = mapRef.current

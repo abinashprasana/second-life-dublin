@@ -100,8 +100,8 @@ def validate_snapshot(snapshot):
     if len(sites) != 134 or len({site.get("id") for site in sites}) != 134:
         errors.append("Expected 134 unique sites")
     scored = [site for site in sites if site.get("coverage", {}).get("evidenceStatus") == "scored"]
-    if len(scored) != 8:
-        errors.append(f"Expected eight scored sites; found {len(scored)}")
+    if not scored or len(scored) != metadata.get("scoreCohortSize"):
+        errors.append(f"Expected {metadata.get('scoreCohortSize')} scored sites; found {len(scored)}")
     for site in sites:
         site_id = site.get("id", "unknown")
         position = site.get("position", {})
@@ -151,7 +151,8 @@ def export():
                 "retrieved": SOURCE_RETRIEVED,
                 "siteCount": len(sites),
                 "osmSiteCount": sum(site["coverage"]["hasOsm"] for site in sites),
-                "scoreCohortSize": 8,
+                # Counted from the cache files on disk so a missed join fails validation.
+                "scoreCohortSize": len(list(CACHE.glob("osm_*.json"))),
                 "sources": [
                     {"name": "Dublin City Council derelict sites register", "publisher": "Dublin City Council",
                      "url": "https://data.smartdublin.ie/dataset/derelict-site-register", "retrieved": SOURCE_RETRIEVED},

@@ -48,6 +48,6 @@ export function validateAtlas(value: unknown): Atlas {
     }
     if (useNames.size !== 4) throw new Error('The evidence file contains duplicate uses.')
   }
-  if (scored !== metadata.osmSiteCount || scored !== 8) throw new Error('The evidence counts do not agree.')
+  if (scored !== metadata.osmSiteCount || scored !== metadata.scoreCohortSize) throw new Error('The evidence counts do not agree.')
   return value as unknown as Atlas
 }

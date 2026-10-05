@@ -101,11 +101,22 @@ button:active:not(:disabled) { transform: scale(.985); }
 .leaflet-container { background: transparent; font-family: Lato, Arial, sans-serif; }
 .leaflet-tooltip { font: 11px Lato, sans-serif; color: var(--paper); background: var(--surface-raised); border: 1px solid var(--control-border); box-shadow: 0 4px 12px color-mix(in srgb, var(--shadow) 20.0%, transparent); }
 .atlas-pin-wrap { background: none; border: 0; }
-.atlas-pin { width: 22px; height: 22px; display: grid; place-items: center; position: relative; }
+.atlas-pin { width: 32px; height: 32px; display: grid; place-items: center; position: relative; }
 .atlas-pin__core { width: 10px; height: 10px; border: 1.5px solid var(--muted-on-dark); border-radius: 50%; background: var(--surface-panel); transition: transform .22s var(--ease); }
 .atlas-pin--covered .atlas-pin__core { background: var(--map-line); border-color: var(--map-line); }
 .atlas-pin--selected::before { content: ''; position: absolute; inset: -3px; border: 1px solid color-mix(in srgb, var(--selection) 60.0%, transparent); border-radius: 50%; background: color-mix(in srgb, var(--selection) 8.2%, transparent); }
 .atlas-pin--selected .atlas-pin__core { background: var(--selection); border: 2px solid var(--paper); transform: scale(1.25); }
+.flat-map-note { position: absolute; top: 12px; left: 12px; z-index: 500; pointer-events: none; padding: 7px 9px; background: color-mix(in srgb, var(--surface-deep) 91%, transparent); color: var(--paper); font: 700 9px Lato, sans-serif; letter-spacing: .1em; }
+.map-site-choices { position: absolute; top: 12px; right: 12px; z-index: 700; width: min(320px, calc(100% - 24px)); max-height: 72%; display: flex; flex-direction: column; padding: 12px; color: var(--paper); background: var(--surface-panel); border: 1px solid var(--control-border); box-shadow: 0 12px 28px #0008; }
+.map-site-choices > div:first-child { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.map-site-choices strong { font: 500 18px Newsreader, Georgia, serif; }
+.map-site-choices p { margin: 5px 0 10px; color: var(--muted-on-dark); font-size: 11px; }
+.map-site-choices > div:last-child { overflow-y: auto; display: grid; gap: 4px; }
+.map-site-choices button { color: var(--paper); background: var(--surface-raised); border: 1px solid var(--control-border); cursor: pointer; }
+.map-site-choices > div:first-child button { width: 28px; height: 28px; font-size: 20px; }
+.map-site-choices > div:last-child button { text-align: left; padding: 8px; font: 12px/1.3 Lato, sans-serif; }
+.map-site-choices > div:last-child button:hover { border-color: var(--selection); }
+.map-site-choices b { color: var(--selection); margin-right: 5px; }
 .static-concept { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 20px; }
 .static-concept svg { width: 75%; height: 260px; }
 .static-concept strong { font: 27px Newsreader,serif; }

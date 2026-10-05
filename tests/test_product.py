@@ -2,11 +2,12 @@
 import copy
 import json
 import unittest
+from unittest.mock import patch
 import pandas as pd
 
 from src.export_web import OUTPUT, validate_snapshot
 from src.join import SITE_TABLE, resolve_join_matches
-from src.load import BOUNDARY_KEY, REGISTER_FIELDS
+from src.load import BOUNDARY_KEY, CACHE, REGISTER_FIELDS
 from src.score import load_table, rank_uses
 from src.scene import project, polygons
 
@@ -54,13 +55,17 @@ class ProductEvidenceTests(unittest.TestCase):
                                  [(item["use"], item["score"], item["facts"]) for item in python])
 
     def test_missing_service_evidence_stays_unscored(self):
-        site = self.sites["DS492"]
-        self.assertEqual(site["coverage"]["evidenceStatus"], "missing_osm")
-        self.assertTrue(all(item["score"] is None for item in site["uses"]))
-        self.assertEqual(sum(row["osm_available"] for row in load_table()), 8)
+        self.assertEqual(sum(row["osm_available"] for row in load_table()), len(list(CACHE.glob("osm_*.json"))))
+        # Every register site is now covered, so simulate a site without a cache file.
+        rows = copy.deepcopy(load_table())
+        row = next(r for r in rows if r["site_id"] == "DS492")
+        row.update(osm_available=False, osm_source=None, osm_retrieved=None, service_stats=None)
+        with patch("src.score.load_table", return_value=rows):
+            self.assertTrue(all(item["score"] is None for item in rank_uses("DS492")))
 
     def test_validation_rejects_wrong_score_and_duplicate_id(self):
-        self.assertEqual(validate_snapshot(self.snapshot)["unscoredCount"], 126)
+        metadata = self.snapshot["metadata"]
+        self.assertEqual(validate_snapshot(self.snapshot)["unscoredCount"], metadata["siteCount"] - metadata["scoreCohortSize"])
         broken = copy.deepcopy(self.snapshot)
         broken["sites"][0]["id"] = broken["sites"][1]["id"]
         with self.assertRaisesRegex(ValueError, "unique sites"):

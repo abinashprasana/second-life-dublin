@@ -14,11 +14,24 @@ from src import assistant_api as api
 ATLAS = json.loads((Path(__file__).resolve().parents[1]/'web/public/data/atlas.json').read_text(encoding='utf-8'))
 
 
+def unscored_copy(site):
+    # Every register site now has cached OSM evidence; keep exercising the unscored path with a copy.
+    site = copy.deepcopy(site)
+    site['coverage'].update(hasOsm=False, evidenceStatus='missing_osm', osmRetrieved=None)
+    for use in site['uses']:
+        use['score'] = None
+    return site
+
+
 class AssistantToolsTests(unittest.TestCase):
     def test_filters_and_null_scores(self):
-        self.assertEqual(len(search_sites(ATLAS,Filters(evidence='scored'))),8)
-        self.assertEqual(len(search_sites(ATLAS,Filters(evidence='missing_osm'))),126)
-        self.assertEqual(search_sites(ATLAS,Filters(evidence='missing_osm',sortUse='Childcare')),[])
+        self.assertEqual(len(search_sites(ATLAS,Filters(evidence='scored'))),ATLAS['metadata']['osmSiteCount'])
+        unscored=ATLAS['metadata']['siteCount']-ATLAS['metadata']['osmSiteCount']
+        self.assertEqual(len(search_sites(ATLAS,Filters(evidence='missing_osm'))),unscored)
+        data=copy.deepcopy(ATLAS)
+        data['sites'][0]=unscored_copy(data['sites'][0])
+        self.assertEqual([s['id'] for s in search_sites(data,Filters(evidence='missing_osm'))],[data['sites'][0]['id']])
+        self.assertEqual(search_sites(data,Filters(evidence='missing_osm',sortUse='Childcare')),[])
         self.assertEqual(search_sites(ATLAS,Filters(text='no such street')),[])
         result=search_sites(ATLAS,Filters(sortUse='Study space',limit=3))
         expected=sorted([s for s in ATLAS['sites'] if s['coverage']['hasOsm']],key=lambda s:next(u['score'] for u in s['uses'] if u['use']=='Study space'),reverse=True)[:3]
@@ -41,8 +54,8 @@ class AssistantToolsTests(unittest.TestCase):
         with self.assertRaises(ValidationError): Filters(script='anything')
 
     def test_comparison_and_citations_are_exact_snapshot_values(self):
-        for site_id in ('DS1596','DS864','DS040','DS492'):
-            site=next(s for s in ATLAS['sites'] if s['id']==site_id)
+        sites=[next(s for s in ATLAS['sites'] if s['id']==site_id) for site_id in ('DS1596','DS864','DS040','DS492')]
+        for site in sites+[unscored_copy(sites[-1])]:
             refs=evidence_for(ATLAS,site)
             for i,use in enumerate(('Childcare','Study space','Repair workshop','Community hub')):
                 self.assertEqual(refs[f'use.{i}']['value'],next(u['score'] for u in site['uses'] if u['use']==use))
@@ -52,7 +65,7 @@ class AssistantToolsTests(unittest.TestCase):
             self.assertTrue({'use.0','use.1'} <= {r['id'] for r in citations})
             self.assertTrue(all(r['id'] in refs for r in citations))
             self.assertTrue(all(id in refs for b in blocks for id in b['evidenceIds']))
-            if site_id=='DS492': self.assertIn('cannot be ranked',' '.join(b['text'] for b in blocks))
+            if not site['coverage']['hasOsm']: self.assertIn('cannot be ranked',' '.join(b['text'] for b in blocks))
         with self.assertRaises(ValueError): answer_from_evidence(intent,refs,['invented'],site)
 
 
@@ -78,7 +91,7 @@ class AssistantApiTests(unittest.TestCase):
         with patch.object(api,'snapshot',return_value=ATLAS),patch.object(api,'model_json',new=AsyncMock(return_value=intent)):
             result=self.client.post('/api/assistant/query',json=self.payload)
         self.assertEqual(result.status_code,200)
-        self.assertEqual(len(result.json()['matchingSiteIds']),8)
+        self.assertEqual(len(result.json()['matchingSiteIds']),ATLAS['metadata']['osmSiteCount'])
 
     def test_invalid_references_fail_closed(self):
         with patch.object(api,'snapshot',return_value=ATLAS),patch.object(api,'model_json',new=AsyncMock(return_value=EvidenceChoice(evidenceIds=['invented']))):

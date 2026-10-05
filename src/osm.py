@@ -90,6 +90,23 @@ def nearby(site, elements):
     return output
 
 
+def osm_api_services(west, south, east, north, depth=0):
+    """OSM API map call. Dense areas exceed the API's node limit (HTTP 400), so split into quarters."""
+    response = requests.get(OSM_API, params={"bbox": f"{west:.7f},{south:.7f},{east:.7f},{north:.7f}"}, timeout=90,
+                            headers={"User-Agent": "SecondLife/1.0 (civic site evidence product)"})
+    if response.status_code == 400 and depth < 3:
+        mid_lon, mid_lat = (west + east) / 2, (south + north) / 2
+        merged = {}
+        for box in ((west, south, mid_lon, mid_lat), (mid_lon, south, east, mid_lat),
+                    (west, mid_lat, mid_lon, north), (mid_lon, mid_lat, east, north)):
+            time.sleep(3)
+            for service in osm_api_services(*box, depth + 1):
+                merged.setdefault(service["id"], service)
+        return list(merged.values())
+    response.raise_for_status()
+    return parse_osm_xml(response.content)
+
+
 def fetch_site(site, provider="osm_api"):
     path = CACHE / f"osm_{site['site_id']}.json"
     if path.exists():
@@ -108,11 +125,7 @@ def fetch_site(site, provider="osm_api"):
                 # 800 m circle enclosed by a latitude/longitude bbox. Distances are filtered below.
                 lat_delta = 800 / 111_000
                 lon_delta = 800 / (111_000 * math.cos(math.radians(lat)))
-                bbox = f"{lon-lon_delta:.7f},{lat-lat_delta:.7f},{lon+lon_delta:.7f},{lat+lat_delta:.7f}"
-                response = requests.get(OSM_API, params={"bbox": bbox}, timeout=90,
-                                        headers={"User-Agent": "SecondLife/1.0 (civic site evidence product)"})
-                response.raise_for_status()
-                services = parse_osm_xml(response.content)
+                services = osm_api_services(lon - lon_delta, lat - lat_delta, lon + lon_delta, lat + lat_delta)
                 source = OSM_API
             result = {"site_id": site["site_id"], "source": source, "retrieved": date.today().isoformat(),
                       "services": nearby(site, services)}
@@ -135,9 +148,10 @@ def selected_sites(sites, n=8):
     return chosen
 
 
-def build_osm_cache(n=8, provider="osm_api"):
+def build_osm_cache(n=None, provider="osm_api"):
+    """Cache evidence for every register site, or a spread sample of n sites."""
     sites = json.loads(SITE_TABLE.read_text(encoding="utf-8"))
-    picked = selected_sites(sites, n)
+    picked = sites if n is None else selected_sites(sites, n)
     for i, site in enumerate(picked, 1):
         path = CACHE / f"osm_{site['site_id']}.json"
         if not path.exists() and i > 1:
