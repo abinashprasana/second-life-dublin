@@ -51,7 +51,7 @@ The scores are a starting point for a conversation. They can't tell you whether 
 
 ## 🖥️ Product Surfaces
 
-**[▶ Open the live atlas](https://web-tau-flax-32.vercel.app/?site=DS1012)**. It opens on Rathmore Park, Raheny (DS1012). The hosted version is the offline atlas only; the assistant needs Ollama on your own machine.
+**[▶ Open the live atlas](https://web-tau-flax-32.vercel.app/?site=DS1012)**. It opens on Rathmore Park, Raheny (DS1012). The hosted version serves the atlas without the local assistant service. Its **Ask about this place** panel will say the service is unavailable; to use the assistant, run the local server and Ollama as described below.
 
 - 🏙️ **Offline React atlas** (`web/`). The main product. Desktop opens on a 3D model of Dublin; phones get a flat map. Every site has its own link (`?site=DS1596`), so you can send someone straight to one. Maps, fonts, census figures and scores all ship with the build, so it makes no calls to the internet.
 - 🤖 **Local assistant** (`src/assistant_api.py`). An optional "Ask about this place" panel. It runs a small AI model on your own computer and can explain a site, compare two uses, or find sites from a plain-English request like "council-owned places with lots of under-15s".
@@ -74,7 +74,7 @@ The scores are a starting point for a conversation. They can't tell you whether 
 
 All four were retrieved on 4 October 2026. The register is the Smart Dublin release last updated on 24 June 2026. All 134 sites matched to exactly one Small Area, and none is missing census figures.
 
-Before a public release, confirm the boundary GeoJSON reuse terms with the publisher. Its resource page does not establish the CC BY 4.0 claim previously shown here.
+The boundary GeoJSON's resource page does not state a licence. I have not been able to confirm its reuse terms with the publisher; that needs resolving for further public distribution.
 
 ### 🔎 How the service evidence was collected
 
@@ -277,6 +277,10 @@ A faster machine will do better. Full notes are in [`artifacts/assistant-verific
 ## 🎨 Interface and 3D Atlas
 
 On desktop the atlas opens on the whole city in 3D, or zooms straight to a site if you came from a link. On a phone it opens on the flat map. Both views can switch between city and site and show or hide the Small Area outlines, nearby services, and 400 m and 800 m rings. The 3D view only draws; all scoring happens in Python.
+
+Click a pin in either map to open its site. If several addresses sit close enough for their pins to overlap, a list lets you choose the right one. The searchable register is also available for selecting a site without using the map. Selecting a site updates its link and the evidence beside the map.
+
+The map's outer line is Dublin City's **administrative boundary**, not a coastline. The fine lines are Small Area boundaries; neither layer shows roads or building footprints. Every site pin uses the register's coordinates. The 400 m and 800 m circles are straight-line distances, so a circle can extend beyond the administrative boundary without putting the site in the sea.
 
 If WebGL fails or the 3D scene won't load, you drop to the flat map with your site still selected. If the map outlines fail too, the pins and search still work. The 3D view pauses when it's off screen and lowers its resolution on slow machines. Reduced-motion settings turn off camera movement and the opening animation.
 
