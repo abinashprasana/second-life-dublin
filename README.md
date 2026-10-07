@@ -8,11 +8,12 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Three.js](https://img.shields.io/badge/Three.js-3D%20Atlas-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
 [![Leaflet](https://img.shields.io/badge/Leaflet-Flat%20Map-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com)
 [![FastAPI](https://img.shields.io/badge/FastAPI-Loopback%20Only-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Ollama](https://img.shields.io/badge/Ollama-qwen3%3A4b%20Local-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-Fallback-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
+[![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-Service%20Data-7EBC6F?style=for-the-badge&logo=openstreetmap&logoColor=white)](https://www.openstreetmap.org/copyright)
 
 <br/>
 
@@ -45,7 +46,7 @@ The scores are a starting point for a conversation. They can't tell you whether 
 | ❓ **The problem** | The register has 134 sites and almost no context, so you can't tell who lives nearby or what services already exist. |
 | 👥 **Who it's for** | Residents' groups, town teams and councillors who want to talk about a specific site with more than a hunch. |
 | 🧩 **The idea** | Compare demand (who lives there) with supply (what's already nearby), show the sums, and give the unknowns the same space as the scores. |
-| 🛠️ **What I built** | A Python data pipeline, a validated data snapshot, an offline React/Three.js/Leaflet atlas, a local-only AI assistant, and a Streamlit fallback. |
+| 🛠️ **What I built** | A Python data pipeline, a validated data snapshot, an offline React/Three.js/Leaflet atlas, and a local-only AI assistant. |
 
 ---
 
@@ -55,7 +56,6 @@ The scores are a starting point for a conversation. They can't tell you whether 
 
 - 🏙️ **Offline React atlas** (`web/`). The main product. Desktop opens on a 3D model of Dublin; phones get a flat map. Every site has its own link (`?site=DS1596`), so you can send someone straight to one. Maps, fonts, census figures and scores all ship with the build, so it makes no calls to the internet.
 - 🤖 **Local assistant** (`src/assistant_api.py`). An optional "Ask about this place" panel. It runs a small AI model on your own computer and can explain a site, compare two uses, or find sites from a plain-English request like "council-owned places with lots of under-15s".
-- 📋 **Streamlit fallback** (`app.py`). A simpler single-file version for machines without Node.js.
 
 ---
 
@@ -67,14 +67,12 @@ The scores are a starting point for a conversation. They can't tell you whether 
 |:---|:---|:---|
 | 🏛️ **Dublin City Council** | [Derelict Sites Register](https://data.smartdublin.ie/dataset/derelict-site-register) on Smart Dublin: 134 sites, GeoJSON | [CC BY](http://www.opendefinition.org/licenses/cc-by) |
 | 📊 **CSO Ireland** | [Census 2022 Small Area Population Statistics](https://www.cso.ie/en/census/census2022/census2022smallareapopulationstatistics/): population, age shares, households | [CC BY 4.0](https://www.cso.ie/en/aboutus/whoweare/copyrightpolicy/) |
-| 🗺️ **Tailte Éireann / CSO** | [Small Area Boundaries 2022, generalised 20 m](https://data.gov.ie/dataset/cso-small-areas-national-statistical-boundaries-2022-generalised-20m/resource/5ace32d6-5e91-4a3a-9e87-998822c09e92): the 2,261 area outlines on the map | Reuse terms need confirmation from the publisher; the GeoJSON resource lists no licence. |
+| 🗺️ **Tailte Éireann / CSO** | [Small Area Boundaries 2022, generalised 20 m](https://data-osi.opendata.arcgis.com/datasets/osi::cso-small-areas-national-statistical-boundaries-2022-generalised-20m/about): the 2,261 area outlines on the map | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) |
 | 🌍 **OpenStreetMap** | Nearby amenities within 800 m (straight line) | [ODbL](https://www.openstreetmap.org/copyright) · © OpenStreetMap contributors |
 
 </div>
 
 All four were retrieved on 4 October 2026. The register is the Smart Dublin release last updated on 24 June 2026. All 134 sites matched to exactly one Small Area, and none is missing census figures.
-
-The boundary GeoJSON's resource page does not state a licence. I have not been able to confirm its reuse terms with the publisher; that needs resolving for further public distribution.
 
 ### 🔎 How the service evidence was collected
 
@@ -102,7 +100,6 @@ flowchart TD
     F["✅ Snapshot export\nsrc/export_web.py\nvalidated before publish"]
     G["🏙️ React atlas\nThree.js city · Leaflet flat map"]
     H["🤖 Local assistant\nFastAPI · Ollama qwen3:4b"]
-    I["📋 Streamlit fallback\napp.py"]
 
     A --> D
     B --> D
@@ -112,7 +109,6 @@ flowchart TD
     F --> G
     F --> H
     H --> G
-    E --> I
 
     style A fill:#1f4e79,color:#ffffff,stroke:#1f4e79
     style B fill:#2e75b6,color:#ffffff,stroke:#2e75b6
@@ -122,7 +118,6 @@ flowchart TD
     style F fill:#7030a0,color:#ffffff,stroke:#7030a0
     style G fill:#071827,color:#ffffff,stroke:#071827
     style H fill:#245b78,color:#ffffff,stroke:#245b78
-    style I fill:#c00000,color:#ffffff,stroke:#c00000
 ```
 
 The export step won't publish bad data. Before it replaces anything in `web/public/data/`, it checks for 134 unique sites, a scored count matching the number of OSM cache files (now 134), four uses each, scores between 0 and 100, and valid coordinates, sources and map shapes. If any check fails, the previous snapshot stays live and the reason is written to `data/cache/export_build_report.json`.
@@ -292,8 +287,7 @@ The cutaway building is an illustration, not a picture of any site on the regist
 
 ```
 secondlife/
-├── 📄 app.py                          Streamlit fallback
-├── 📋 requirements.txt                Data pipeline + Streamlit dependencies
+├── 📋 requirements.txt                Data pipeline dependencies
 ├── 📋 requirements-assistant.txt      Extra dependencies for the assistant
 ├── ⚙️ run-assistant.ps1               Windows launcher for the assistant
 ├── 📄 .env.example                    Optional OSM endpoint overrides
@@ -362,14 +356,6 @@ python -m src.assistant_api
 ```
 
 Start Ollama first, then open `http://127.0.0.1:8765/`. On Windows, `./run-assistant.ps1` does the Python setup for you. You need internet once, to download the model. For frontend work with hot reload, run the assistant server and `npm run dev` in two terminals.
-
-### 📋 Run the Streamlit fallback
-
-```bash
-streamlit run app.py
-```
-
-It opens on `http://localhost:8501`.
 
 ### 🔄 Rebuild the data
 
