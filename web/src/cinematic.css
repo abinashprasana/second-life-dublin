@@ -26,9 +26,7 @@ button:active:not(:disabled) { transform: scale(.985); }
 .product-header, .cinematic-opening, .product-footer { background: var(--surface-deep); color: var(--paper); }
 .product-top { min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--dark-line); }
 .product-brand { display: flex; align-items: center; gap: 13px; text-decoration: none; }
-.product-brand > span { font: 500 26px Newsreader, Georgia, serif; border: 1px solid var(--control-border); padding: 8px 8px 4px; letter-spacing: -2px; }
-.product-brand > span span { font: 15px Lato, sans-serif; color: var(--selection); padding-inline: 2px; }
-.product-brand strong { font-size: 13px; letter-spacing: .2em; }
+.product-brand img { display: block; width: auto; height: 44px; }
 .product-top > span { font-size: 10px; letter-spacing: .16em; color: var(--muted-on-dark); }
 .product-top > a:last-child { font-size: 12px; color: var(--light-tint); text-decoration: none; }
 .product-top > a:last-child span { color: var(--selection); margin-left: 15px; }
@@ -300,7 +298,7 @@ button:active:not(:disabled) { transform: scale(.985); }
 @media(max-width:600px) {
   .wrap { width: calc(100% - 32px); }
   .product-top { min-height: 65px; }
-  .product-brand strong { font-size: 11px; }
+  .product-brand img { height: 33px; }
   .product-intro { display: block; padding-top: 28px; padding-bottom: 26px; }
   .product-intro h1 { font-size: 52px; margin-top: 16px; }
   .intro-aside { margin-top: 21px; }
